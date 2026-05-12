@@ -1,0 +1,299 @@
+<div class="detail-root" [class.dark]="theme.isDark()">
+
+  <!-- ══════════ NAVBAR ══════════ -->
+  <header class="detail-navbar">
+    <div class="detail-navbar__brand">
+      <div class="detail-brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="detail-navbar__title">OrgVault</span>
+    </div>
+    <div class="detail-navbar__actions">
+      <button class="back-btn" (click)="back()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        {{ i18n.t('DETAIL_BACK') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading bar -->
+  <div class="detail-loading" *ngIf="loading()">
+    <div class="detail-loading__bar"></div>
+  </div>
+
+  <!-- Not found -->
+  <div class="detail-empty" *ngIf="!loading() && !org()">
+    <div class="detail-empty__icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
+    <p class="detail-empty__title">{{ i18n.t('DETAIL_NOT_FOUND') }}</p>
+    <p class="detail-empty__sub">{{ i18n.t('DETAIL_DELETE_MSG') }}.</p>
+    <button class="act-btn act-btn--primary" style="margin-top:8px" (click)="back()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      {{ i18n.t('DETAIL_BACK') }}
+    </button>
+  </div>
+
+  <!-- ══════════ MAIN CONTENT ══════════ -->
+  <main class="detail-main" *ngIf="!loading() && org() as org">
+
+    <!-- ── Hero card ── -->
+    <div class="hero-card">
+      <div class="hero-card__glow" [style.background]="typeColor(org.orgType)"></div>
+      <div class="hero-card__body">
+        <div class="hero-avatar"
+          [style.background]="typeColor(org.orgType) + '20'"
+          [style.color]="typeColor(org.orgType)"
+          [style.border-color]="typeColor(org.orgType) + '44'">
+          {{ initials }}
+        </div>
+        <div class="hero-info">
+          <h1 class="hero-name">{{ org.name }}</h1>
+          <div class="hero-meta">
+            <span class="type-badge"
+              [style.background]="typeColor(org.orgType) + '18'"
+              [style.color]="typeColor(org.orgType)"
+              [style.border-color]="typeColor(org.orgType) + '40'">
+              {{ org.orgType }}
+            </span>
+            <span class="status-pill"
+              [class.status-pill--active]="org.status === 'Active'"
+              [class.status-pill--inactive]="org.status === 'Inactive'"
+              [class.status-pill--pending]="org.status === 'Pending'">
+              <span class="status-dot"></span>{{ org.status }}
+            </span>
+            <span class="hero-id">ID #{{ org.id }}</span>
+          </div>
+        </div>
+
+        <div class="hero-card__toolbar">
+          <button class="act-btn act-btn--outline" (click)="openEdit()" *ngIf="!editMode()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            {{ i18n.t('DETAIL_EDIT') }}
+          </button>
+          <button class="act-btn act-btn--danger-ghost" (click)="showDeleteConfirm.set(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            {{ i18n.t('DETAIL_DELETE') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stats mini-row ── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8"/></svg>
+        </div>
+        <div class="stat-card__content">
+          <p class="stat-card__label">{{ i18n.t('DETAIL_CONTACT') }}</p>
+          <p class="stat-card__value stat-card__value--mono">{{ org.contact }}</p>
+        </div>
+        <button class="copy-btn" (click)="copy(org.contact)" title="Copy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+
+      <div class="stat-card" *ngIf="org.email">
+        <div class="stat-card__icon stat-card__icon--purple">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="stat-card__content">
+          <p class="stat-card__label">{{ i18n.t('DETAIL_EMAIL') }}</p>
+          <p class="stat-card__value">{{ org.email }}</p>
+        </div>
+        <button class="copy-btn" (click)="copy(org.email!)" title="Copy">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+
+      <div class="stat-card" *ngIf="org.employees">
+        <div class="stat-card__icon stat-card__icon--teal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-card__content">
+          <p class="stat-card__label">{{ i18n.t('DETAIL_EMPLOYEES') }}</p>
+          <p class="stat-card__value">{{ org.employees | number }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--amber">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="stat-card__content">
+          <p class="stat-card__label">{{ i18n.t('ORG_DATE') }}</p>
+          <p class="stat-card__value">{{ org.createdOn }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ VIEW MODE ══════ -->
+    <div class="detail-section" *ngIf="!editMode()">
+      <div class="detail-section__header">
+        <h2 class="detail-section__title">{{ i18n.t('DETAIL_OVERVIEW') }}</h2>
+        <button class="edit-link" (click)="openEdit()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          {{ i18n.t('DETAIL_EDIT') }}
+        </button>
+      </div>
+
+      <div class="overview-grid">
+        <div class="overview-row">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_NAME') }}</span>
+          <div class="overview-row__right">
+            <span class="overview-row__val">{{ org.name }}</span>
+            <button class="copy-mini" (click)="copy(org.name)" title="Copy">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="overview-row">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_TYPE') }}</span>
+          <span class="overview-row__val">
+            <span class="type-badge"
+              [style.background]="typeColor(org.orgType) + '15'"
+              [style.color]="typeColor(org.orgType)"
+              [style.border-color]="typeColor(org.orgType) + '35'">{{ org.orgType }}</span>
+          </span>
+        </div>
+        <div class="overview-row">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_STATUS') }}</span>
+          <span class="status-pill"
+            [class.status-pill--active]="org.status === 'Active'"
+            [class.status-pill--inactive]="org.status === 'Inactive'"
+            [class.status-pill--pending]="org.status === 'Pending'">
+            <span class="status-dot"></span>{{ org.status }}
+          </span>
+        </div>
+        <div class="overview-row">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_CONTACT') }}</span>
+          <div class="overview-row__right">
+            <span class="overview-row__val overview-row__val--mono">{{ org.contact }}</span>
+            <button class="copy-mini" (click)="copy(org.contact)" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+        </div>
+        <div class="overview-row" *ngIf="org.email">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_EMAIL') }}</span>
+          <div class="overview-row__right">
+            <span class="overview-row__val">{{ org.email }}</span>
+            <button class="copy-mini" (click)="copy(org.email!)" title="Copy"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          </div>
+        </div>
+        <div class="overview-row" *ngIf="org.website">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_WEBSITE') }}</span>
+          <span class="overview-row__val overview-row__val--link">{{ org.website }}</span>
+        </div>
+        <div class="overview-row" *ngIf="org.employees">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_EMPLOYEES') }}</span>
+          <span class="overview-row__val">{{ org.employees | number }}</span>
+        </div>
+        <div class="overview-row" *ngIf="org.address">
+          <span class="overview-row__key">{{ i18n.t('DETAIL_ADDRESS') }}</span>
+          <span class="overview-row__val">{{ org.address }}</span>
+        </div>
+        <div class="overview-row">
+          <span class="overview-row__key">{{ i18n.t('ORG_DATE') }}</span>
+          <span class="overview-row__val">{{ org.createdOn }}</span>
+        </div>
+        <div class="overview-row">
+          <span class="overview-row__key">Record ID</span>
+          <span class="overview-row__val overview-row__val--muted">#{{ org.id }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ EDIT MODE ══════ -->
+    <div class="detail-section edit-section" *ngIf="editMode()">
+      <div class="detail-section__header">
+        <h2 class="detail-section__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          {{ i18n.t('DETAIL_EDIT') }}
+        </h2>
+      </div>
+
+      <div class="edit-alert" *ngIf="editError">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ editError }}
+      </div>
+
+      <div class="edit-grid">
+        <div class="edit-field edit-field--full">
+          <label>{{ i18n.t('DETAIL_NAME') }} <span class="req">*</span></label>
+          <input [(ngModel)]="draftName" placeholder="e.g. Acme Corporation" />
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_TYPE') }}</label>
+          <select [(ngModel)]="draftType">
+            <option *ngFor="let t of orgTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_STATUS') }}</label>
+          <select [(ngModel)]="draftStatus">
+            <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_CONTACT') }} <span class="req">*</span></label>
+          <input [(ngModel)]="draftContact" type="tel" placeholder="+1 (555) 000-0000" />
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_EMAIL') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="draftEmail" type="email" placeholder="contact@company.com" />
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_WEBSITE') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="draftWebsite" type="url" placeholder="https://company.com" />
+        </div>
+        <div class="edit-field">
+          <label>{{ i18n.t('DETAIL_EMPLOYEES') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="draftEmployees" type="number" placeholder="e.g. 500" min="1" />
+        </div>
+        <div class="edit-field edit-field--full">
+          <label>{{ i18n.t('DETAIL_ADDRESS') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="draftAddress" placeholder="123 Business Ave, Suite 100" />
+        </div>
+      </div>
+
+      <div class="edit-footer">
+        <button class="act-btn act-btn--ghost" (click)="cancelEdit()" [disabled]="saveLoading">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          {{ i18n.t('DETAIL_CANCEL') }}
+        </button>
+        <button class="act-btn act-btn--primary" (click)="saveEdit()" [disabled]="saveLoading">
+          <span class="btn-spin" *ngIf="saveLoading"></span>
+          <svg *ngIf="!saveLoading" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          {{ saveLoading ? i18n.t('FB_SAVING') : i18n.t('DETAIL_SAVE') }}
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════ DELETE CONFIRM ══════════ -->
+<div class="confirm-backdrop" *ngIf="showDeleteConfirm()" (click)="showDeleteConfirm.set(false)">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <div class="confirm-dialog__icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <h3>{{ i18n.t('DETAIL_DELETE_TITLE') }}</h3>
+    <p>{{ i18n.t('DETAIL_DELETE_MSG') }} <strong>{{ org()?.name }}</strong>.</p>
+    <div class="confirm-dialog__actions">
+      <button class="confirm-btn confirm-btn--ghost" (click)="showDeleteConfirm.set(false)">{{ i18n.t('DETAIL_CANCEL') }}</button>
+      <button class="confirm-btn confirm-btn--danger" (click)="executeDelete()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        {{ i18n.t('DETAIL_DELETE_BTN') }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,302 @@
+<div class="auth-page">
+
+  <!-- ══ Left panel ══ -->
+  <div class="auth-left">
+    <div class="auth-left__inner">
+
+      <div class="auth-left__brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <span>OrgVault</span>
+      </div>
+
+      <div class="auth-left__copy">
+        <h2>{{ i18n.t('AUTH_LEFT_TITLE') }}</h2>
+        <p>{{ i18n.t('AUTH_LEFT_SUB') }}</p>
+      </div>
+
+      <ul class="auth-features">
+        <li>
+          <div class="feature-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>{{ i18n.t('AUTH_FEAT_1') }}</span>
+        </li>
+        <li>
+          <div class="feature-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>{{ i18n.t('AUTH_FEAT_2') }}</span>
+        </li>
+        <li>
+          <div class="feature-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>{{ i18n.t('AUTH_FEAT_3') }}</span>
+        </li>
+        <li>
+          <div class="feature-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>{{ i18n.t('AUTH_FEAT_4') }}</span>
+        </li>
+      </ul>
+
+      <div class="auth-left__testimonial">
+        <p>{{ i18n.t('AUTH_TESTIMONIAL') }}</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">JS</div>
+          <div>
+            <div class="testimonial-name">{{ i18n.t('AUTH_TESTI_NAME') }}</div>
+            <div class="testimonial-role">{{ i18n.t('AUTH_TESTI_ROLE') }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="left-blob left-blob--1"></div>
+    <div class="left-blob left-blob--2"></div>
+    <div class="left-blob left-blob--3"></div>
+    <div class="left-grid"></div>
+  </div>
+
+  <!-- ══ Right panel ══ -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+
+      <!-- Language selector -->
+      <div class="lang-selector">
+        <p class="lang-selector__heading">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          {{ i18n.t('LANG_LABEL') }}
+        </p>
+        <div class="lang-selector__grid">
+
+          <button class="lang-card" [class.lang-card--active]="i18n.lang()==='en'" (click)="i18n.switchLang('en')">
+            <span class="lang-card__check" *ngIf="i18n.lang()==='en'">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="lang-card__name">English</span>
+            <span class="lang-card__native">English</span>
+          </button>
+
+          <button class="lang-card" [class.lang-card--active]="i18n.lang()==='ta'" (click)="i18n.switchLang('ta')">
+            <span class="lang-card__check" *ngIf="i18n.lang()==='ta'">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="lang-card__name">Tamil</span>
+            <span class="lang-card__native">தமிழ்</span>
+          </button>
+
+          <button class="lang-card" [class.lang-card--active]="i18n.lang()==='fr'" (click)="i18n.switchLang('fr')">
+            <span class="lang-card__check" *ngIf="i18n.lang()==='fr'">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="lang-card__name">French</span>
+            <span class="lang-card__native">Français</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Mobile-only brand -->
+      <div class="auth-mobile-brand">
+        <div class="brand-logo brand-logo--purple">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <span>OrgVault</span>
+      </div>
+
+      <!-- ── Sign-in form ── -->
+      <ng-container *ngIf="!showForgotPw">
+
+        <div class="form-header">
+          <h1>{{ i18n.t('AUTH_SIGNIN_TITLE') }}</h1>
+          <p>{{ i18n.t('AUTH_SIGNIN_SUB') }}</p>
+        </div>
+
+        <div class="form-alert form-alert--error" *ngIf="error">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ error }}
+        </div>
+
+        <!-- Social buttons -->
+        <div class="social-row">
+          <button type="button" class="social-btn" disabled title="Coming soon">
+            <svg width="17" height="17" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google
+          </button>
+          <button type="button" class="social-btn" disabled title="Coming soon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            GitHub
+          </button>
+        </div>
+
+        <div class="divider"><span>{{ i18n.t('AUTH_OR_EMAIL') }}</span></div>
+
+        <form class="auth-form" (ngSubmit)="submit()">
+
+          <!-- Email -->
+          <div class="field" [class.field--error]="emailError">
+            <label for="login-email">{{ i18n.t('AUTH_EMAIL') }}</label>
+            <div class="field__input-wrap">
+              <svg class="field__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input
+                id="login-email"
+                type="email"
+                [placeholder]="i18n.t('AUTH_EMAIL_PH')"
+                [(ngModel)]="email"
+                name="email"
+                (blur)="emailTouched = true"
+                autocomplete="email"
+              />
+            </div>
+            <span class="field__error-msg" *ngIf="emailError">{{ emailError }}</span>
+          </div>
+
+          <!-- Password -->
+          <div class="field" [class.field--error]="passwordError">
+            <div class="field__label-row">
+              <label for="login-password">{{ i18n.t('AUTH_PASSWORD') }}</label>
+              <button type="button" class="forgot-link" (click)="toggleForgotPw()">{{ i18n.t('AUTH_FORGOT') }}</button>
+            </div>
+            <div class="field__input-wrap">
+              <svg class="field__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input
+                id="login-password"
+                [type]="showPassword ? 'text' : 'password'"
+                [placeholder]="i18n.t('AUTH_PW_PH')"
+                [(ngModel)]="password"
+                name="password"
+                (blur)="passwordTouched = true"
+                autocomplete="current-password"
+              />
+              <button type="button" class="toggle-pw" (click)="showPassword = !showPassword" tabindex="-1">
+                <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <span class="field__error-msg" *ngIf="passwordError">{{ passwordError }}</span>
+          </div>
+
+          <!-- Remember me -->
+          <div class="remember-row">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" />
+              <span class="checkbox-custom"></span>
+              <span>{{ i18n.t('AUTH_REMEMBER') }}</span>
+            </label>
+          </div>
+
+          <!-- Submit -->
+          <button class="submit-btn" type="submit" [disabled]="loading">
+            <span class="btn-spinner" *ngIf="loading"></span>
+            <ng-container *ngIf="!loading">
+              {{ i18n.t('AUTH_SIGNIN_BTN') }}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </ng-container>
+            <ng-container *ngIf="loading">{{ i18n.t('AUTH_SIGNIN_ING') }}</ng-container>
+          </button>
+
+        </form>
+
+        <p class="auth-switch">
+          {{ i18n.t('AUTH_NO_ACCOUNT') }}
+          <a routerLink="/signup" class="auth-link">{{ i18n.t('AUTH_CREATE_FREE') }}</a>
+        </p>
+
+      </ng-container>
+
+      <!-- ── Forgot password panel ── -->
+      <ng-container *ngIf="showForgotPw">
+
+        <div class="form-header">
+          <button type="button" class="back-btn" (click)="toggleForgotPw()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            {{ i18n.t('AUTH_BACK_SIGNIN') }}
+          </button>
+          <h1 style="margin-top:20px">{{ i18n.t('AUTH_RESET_TITLE') }}</h1>
+          <p>{{ i18n.t('AUTH_RESET_SUB') }}</p>
+        </div>
+
+        <div class="form-alert form-alert--success" *ngIf="resetSent">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span>{{ i18n.t('AUTH_RESET_SENT') }} <strong>{{ resetEmail }}</strong>.</span>
+        </div>
+
+        <div class="form-alert form-alert--error" *ngIf="resetError">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ resetError }}
+        </div>
+
+        <ng-container *ngIf="!resetSent">
+          <div class="field" style="margin-bottom:16px">
+            <label for="reset-email">{{ i18n.t('AUTH_EMAIL') }}</label>
+            <div class="field__input-wrap">
+              <svg class="field__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input id="reset-email" type="email" [placeholder]="i18n.t('AUTH_EMAIL_PH')" [(ngModel)]="resetEmail" name="resetEmail" />
+            </div>
+          </div>
+          <button class="submit-btn" type="button" (click)="submitReset()" [disabled]="resetLoading">
+            <span class="btn-spinner" *ngIf="resetLoading"></span>
+            <ng-container *ngIf="!resetLoading">{{ i18n.t('AUTH_SEND_RESET') }}</ng-container>
+            <ng-container *ngIf="resetLoading">{{ i18n.t('AUTH_SENDING') }}</ng-container>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="resetSent">
+          <button class="submit-btn submit-btn--outline" type="button" (click)="toggleForgotPw()" style="margin-top:8px">
+            {{ i18n.t('AUTH_RETURN_SIGNIN') }}
+          </button>
+        </ng-container>
+
+      </ng-container>
+
+    </div>
+  </div>
+
+</div>

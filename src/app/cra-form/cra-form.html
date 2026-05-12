@@ -1,0 +1,69 @@
+<div class="page">
+  <div class="header">
+    <div class="header__brand">
+      <span class="header__icon">📋</span>
+      <h3 class="header__title">CRA Form Builder</h3>
+    </div>
+    <div class="header__actions">
+      <button class="hdr-btn hdr-btn--back" (click)="back()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        Back
+      </button>
+    </div>
+  </div>
+
+  <div class="builder-container">
+    <!-- Left Sidebar - Component Palette -->
+    <div class="component-sidebar">
+      <div class="sidebar-header">
+        <input
+          type="text"
+          class="component-search"
+          placeholder="Search field(s)"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event).target.value)"
+        />
+      </div>
+
+      <div class="categories-list">
+        <div *ngFor="let category of getFilteredCategories()" class="category">
+          <button
+            class="category-header"
+            (click)="toggleCategory(category.name)"
+            [class.expanded]="category.expanded"
+          >
+            <span class="category-icon">{{ category.icon }}</span>
+            <span class="category-name">{{ category.name }}</span>
+            <span class="category-toggle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+
+          <div *ngIf="category.expanded" class="components-list">
+            <button
+              *ngFor="let component of category.components"
+              class="component-item"
+              (click)="addComponent(component)"
+            >
+              <span class="component-icon">{{ component.icon }}</span>
+              <span class="component-label">{{ component.label }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Content - Form Builder Canvas -->
+    <div class="builder-canvas-wrapper">
+      <div *ngIf="loading" class="loading">
+        <span>Initializing Form Builder...</span>
+      </div>
+      <div *ngIf="error" class="error">{{ error }}</div>
+      <div id="formBuilder" class="form-builder"></div>
+    </div>
+  </div>
+</div>

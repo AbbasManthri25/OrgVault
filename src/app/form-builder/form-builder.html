@@ -1,0 +1,894 @@
+<div class="fb-root" [class.dark]="theme.isDark()">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="fb-header">
+    <div class="fb-header__brand">
+      <button class="fb-back-btn" (click)="back()" title="Back to Organizations">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="fb-brand-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      </div>
+      <span class="fb-brand-label">{{ i18n.t('FB_TITLE') }}</span>
+    </div>
+
+    <div class="fb-header__center">
+      <input class="fb-title-input" [(ngModel)]="config().title" (ngModelChange)="patchConfig({title: $event})" placeholder="Untitled Form" />
+      <span class="fb-save-status" [class.fb-save-status--saving]="saveStatus()==='saving'" [class.fb-save-status--unsaved]="saveStatus()==='unsaved'">
+        <span class="fb-save-dot"></span>
+        {{ saveStatus() === 'saved' ? i18n.t('FB_SAVED') : saveStatus() === 'saving' ? i18n.t('FB_SAVING') : i18n.t('FB_UNSAVED') }}
+      </span>
+    </div>
+
+    <div class="fb-header__actions">
+      <!-- Undo/Redo -->
+      <button class="fb-icon-btn" (click)="undo()" [disabled]="!canUndo()" title="Undo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 6 6.2"/></svg>
+      </button>
+      <button class="fb-icon-btn" (click)="redo()" [disabled]="!canRedo()" title="Redo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18 6.2"/></svg>
+      </button>
+      <div class="fb-header__divider"></div>
+      <button class="fb-icon-btn" (click)="exportJson()" title="Export JSON">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <button class="fb-icon-btn" (click)="clearDraft()" title="Clear form">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+      <div class="fb-header__divider"></div>
+      <button class="fb-preview-btn" (click)="openPreview()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        {{ i18n.t('FB_PREVIEW') }}
+      </button>
+      <button class="fb-save-btn" (click)="saveDraft()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        {{ i18n.t('FB_SAVE_DRAFT') }}
+      </button>
+      <button class="fb-publish-btn" (click)="publish()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        {{ i18n.t('FB_PUBLISH') }}
+      </button>
+
+      <div class="fb-user-chip" *ngIf="currentUser">
+        <div class="fb-user-avatar">{{ currentUser!.charAt(0).toUpperCase() }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ BODY ══════════ -->
+  <div class="fb-body" cdkDropListGroup>
+
+    <!-- ════ LEFT SIDEBAR ════ -->
+    <aside class="fb-sidebar-left">
+      <!-- Tabs -->
+      <div class="fb-left-tabs">
+        <button class="fb-left-tab" [class.fb-left-tab--active]="leftTab()==='fields'" (click)="leftTab.set('fields')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          {{ i18n.t('FB_FIELDS') }}
+        </button>
+        <button class="fb-left-tab" [class.fb-left-tab--active]="leftTab()==='templates'" (click)="leftTab.set('templates')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          {{ i18n.t('FB_TEMPLATES') }}
+        </button>
+        <button class="fb-left-tab" [class.fb-left-tab--active]="leftTab()==='ai'" (click)="leftTab.set('ai')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+          {{ i18n.t('FB_AI') }}
+        </button>
+      </div>
+
+      <!-- ── Fields Panel ── -->
+      <div class="fb-left-content" *ngIf="leftTab()==='fields'">
+        <div class="fb-palette-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input [(ngModel)]="paletteSearch" (ngModelChange)="cdr.markForCheck()" placeholder="Search fields…" />
+        </div>
+
+        <div id="fb-palette" cdkDropList [cdkDropListData]="ALL_ITEMS" [cdkDropListConnectedTo]="['fb-canvas']" cdkDropListSortingDisabled class="fb-palette-list">
+          <ng-container *ngFor="let group of filteredPalette()">
+            <button class="fb-group-header" (click)="toggleGroup(group.name)">
+              <span class="fb-group-dot" [style.background]="group.color"></span>
+              <span class="fb-group-name">{{ group.name }}</span>
+              <span class="fb-group-count">{{ group.items.length }}</span>
+              <svg class="fb-group-chevron" [class.rotated]="expandedGroups().has(group.name)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <ng-container *ngIf="expandedGroups().has(group.name)">
+              <div *ngFor="let item of group.items" class="fb-palette-item" cdkDrag [cdkDragData]="item" (click)="addField(item.type)">
+                <div class="fb-palette-item__icon" [style.background]="item.color + '18'" [style.color]="item.color">{{ item.icon }}</div>
+                <div class="fb-palette-item__info">
+                  <span class="fb-palette-item__label">{{ item.label }}</span>
+                  <span class="fb-palette-item__desc">{{ item.description }}</span>
+                </div>
+                <svg class="fb-palette-item__drag" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+                <!-- Drag preview -->
+                <div *cdkDragPreview class="fb-drag-preview">
+                  <span [style.background]="item.color + '18'" [style.color]="item.color" class="fb-drag-preview__icon">{{ item.icon }}</span>
+                  {{ item.label }}
+                </div>
+                <div *cdkDragPlaceholder class="fb-drag-placeholder"></div>
+              </div>
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- ── Templates Panel ── -->
+      <div class="fb-left-content" *ngIf="leftTab()==='templates'">
+        <p class="fb-panel-hint">Click a template to load it into the canvas.</p>
+        <div class="fb-template-grid">
+          <div class="fb-template-card" *ngFor="let t of TEMPLATES" (click)="loadTemplate(t.id)">
+            <div class="fb-template-card__icon">{{ t.icon }}</div>
+            <div class="fb-template-card__body">
+              <div class="fb-template-card__name">{{ t.name }}</div>
+              <div class="fb-template-card__meta">{{ t.category }} · {{ t.fieldCount }} fields</div>
+              <div class="fb-template-card__desc">{{ t.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI Panel ── -->
+      <div class="fb-left-content" *ngIf="leftTab()==='ai'">
+        <div class="fb-ai-header">
+          <div class="fb-ai-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+            AI Assistant
+          </div>
+          <p class="fb-ai-hint">Describe your form and AI will suggest fields to add.</p>
+        </div>
+        <textarea class="fb-ai-textarea" [(ngModel)]="aiPrompt" placeholder="e.g. Job application form for a software engineer position with experience, skills, and portfolio sections…" rows="4"></textarea>
+        <button class="fb-ai-btn" (click)="runAi()" [disabled]="isAiLoading()">
+          <span class="fb-ai-spin" *ngIf="isAiLoading()"></span>
+          <svg *ngIf="!isAiLoading()" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          {{ isAiLoading() ? 'Generating…' : 'Generate Suggestions' }}
+        </button>
+
+        <div class="fb-ai-suggestions" *ngIf="aiSuggestions().length > 0">
+          <p class="fb-ai-suggestions__title">Suggested Fields</p>
+          <div class="fb-ai-suggestion-item" *ngFor="let s of aiSuggestions()">
+            <div class="fb-ai-suggestion-item__icon" [style.background]="fieldGroupColor(s.type!) + '18'" [style.color]="fieldGroupColor(s.type!)">{{ fieldIcon(s.type!) }}</div>
+            <div class="fb-ai-suggestion-item__info">
+              <span class="fb-ai-suggestion-item__label">{{ s.label }}</span>
+              <span class="fb-ai-suggestion-item__type">{{ s.type }}</span>
+            </div>
+            <button class="fb-ai-add-btn" (click)="acceptSuggestion(s)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ════ CANVAS ════ -->
+    <main class="fb-canvas" (click)="deselect()">
+      <!-- Step tabs -->
+      <div class="fb-steps-bar" (click)="$event.stopPropagation()">
+        <button *ngFor="let step of config().steps; let i = index; trackBy: trackByStep"
+          class="fb-step-tab" [class.fb-step-tab--active]="stepIndex() === i" (click)="stepIndex.set(i)">
+          <span class="fb-step-tab__num">{{ i + 1 }}</span>
+          <span class="fb-step-tab__title">{{ step.title }}</span>
+          <button class="fb-step-tab__del" *ngIf="config().steps.length > 1" (click)="deleteStep(i, $event)" title="Remove step">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </button>
+        <button class="fb-step-add-btn" (click)="$event.stopPropagation(); showNewStep.set(true)" title="Add step">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <!-- Add step inline -->
+        <div class="fb-new-step-row" *ngIf="showNewStep()" (click)="$event.stopPropagation()">
+          <input class="fb-new-step-input" [(ngModel)]="newStepTitle" placeholder="Step title" (keydown.enter)="addStep()" autofocus />
+          <button class="fb-new-step-ok" (click)="addStep()">Add</button>
+          <button class="fb-new-step-cancel" (click)="showNewStep.set(false)">✕</button>
+        </div>
+      </div>
+
+      <!-- Step header (editable title/description) -->
+      <div class="fb-canvas__step-header" (click)="$event.stopPropagation()">
+        <input class="fb-step-title-input" [value]="currentStep().title" (input)="renameStep(stepIndex(), $any($event.target).value)" placeholder="Step title…" />
+        <input class="fb-step-desc-input" [value]="currentStep().description" placeholder="Step description (optional)…"
+          (input)="updateStepDesc($any($event.target).value)" />
+      </div>
+
+      <!-- Drop zone -->
+      <div class="fb-canvas__area" id="fb-canvas" cdkDropList
+        [cdkDropListData]="currentFields()"
+        [cdkDropListConnectedTo]="['fb-palette']"
+        (cdkDropListDropped)="onCanvasDrop($event)"
+        (click)="$event.stopPropagation()">
+
+        <!-- Empty state -->
+        <div class="fb-canvas__empty" *ngIf="currentFields().length === 0">
+          <div class="fb-canvas__empty-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <p class="fb-canvas__empty-title">Drop fields here to build your form</p>
+          <p class="fb-canvas__empty-sub">Drag from the left panel, or click any field type to add it</p>
+        </div>
+
+        <!-- Field cards -->
+        <div *ngFor="let field of currentFields(); trackBy: trackByField"
+          class="fb-field-card"
+          [class.fb-field-card--selected]="selectedId() === field.id"
+          [class.fb-field-card--layout]="isLayout(field.type)"
+          [class.fb-field-card--half]="field.width === 'half'"
+          [class.fb-field-card--third]="field.width === 'third'"
+          cdkDrag [cdkDragData]="field"
+          (click)="selectField(field.id); $event.stopPropagation()">
+
+          <!-- Drag handle -->
+          <div class="fb-field-card__handle" cdkDragHandle (click)="$event.stopPropagation()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+          </div>
+
+          <!-- Field preview content -->
+          <div class="fb-field-card__body">
+            <!-- Layout fields -->
+            <ng-container *ngIf="field.type === 'heading'">
+              <ng-container [ngSwitch]="field.level">
+                <h1 *ngSwitchCase="1" class="fb-preview-h1">{{ field.content || 'Heading' }}</h1>
+                <h2 *ngSwitchCase="2" class="fb-preview-h2">{{ field.content || 'Heading' }}</h2>
+                <h3 *ngSwitchDefault class="fb-preview-h3">{{ field.content || 'Heading' }}</h3>
+              </ng-container>
+            </ng-container>
+            <p class="fb-preview-paragraph" *ngIf="field.type === 'paragraph'">{{ field.content || 'Paragraph text…' }}</p>
+            <div class="fb-preview-divider" *ngIf="field.type === 'divider'"></div>
+            <div class="fb-preview-spacer" *ngIf="field.type === 'spacer'"></div>
+
+            <!-- Regular fields -->
+            <ng-container *ngIf="!isLayout(field.type)">
+              <div class="fb-field-label">
+                {{ field.label }}<span class="fb-required" *ngIf="field.required">*</span>
+                <span class="fb-field-type-tag" [style.background]="fieldGroupColor(field.type)+'18'" [style.color]="fieldGroupColor(field.type)">{{ field.type }}</span>
+              </div>
+              <!-- Previews per type -->
+              <div class="fb-field-preview">
+                <input *ngIf="['text','email','number','tel','url','password','date','time','datetime','color'].includes(field.type)"
+                  class="fb-preview-input" [type]="field.type === 'color' ? 'color' : field.type"
+                  [placeholder]="field.placeholder || ''"
+                  readonly />
+                <textarea *ngIf="field.type === 'textarea'"
+                  class="fb-preview-input fb-preview-textarea" [rows]="field.rows || 3"
+                  [placeholder]="field.placeholder || ''" readonly></textarea>
+                <select class="fb-preview-input" *ngIf="field.type === 'select' || field.type === 'multiselect'" [attr.multiple]="field.type === 'multiselect' ? true : null">
+                  <option value="" disabled selected>Choose an option…</option>
+                  <option *ngFor="let opt of field.options">{{ opt.label }}</option>
+                </select>
+                <div class="fb-preview-radio" *ngIf="field.type === 'radio'">
+                  <label class="fb-preview-radio-item" *ngFor="let opt of field.options; let i = index">
+                    <input type="radio" [name]="field.id" [disabled]="true" />{{ opt.label }}
+                  </label>
+                </div>
+                <div class="fb-preview-checkbox" *ngIf="field.type === 'checkbox'">
+                  <label class="fb-preview-checkbox-item" *ngFor="let opt of field.options">
+                    <input type="checkbox" [disabled]="true" />{{ opt.label }}
+                  </label>
+                </div>
+                <div class="fb-preview-toggle" *ngIf="field.type === 'toggle'">
+                  <div class="fb-toggle-track"><div class="fb-toggle-thumb"></div></div>
+                  <span>{{ field.label }}</span>
+                </div>
+                <div class="fb-preview-rating" *ngIf="field.type === 'rating'">
+                  <span class="fb-star" *ngFor="let s of stars(field.maxRating || 5)">★</span>
+                </div>
+                <input class="fb-preview-input" type="range" *ngIf="field.type === 'slider'" [min]="field.min || 0" [max]="field.max || 100" [step]="field.step || 1" readonly />
+                <div class="fb-preview-file" *ngIf="field.type === 'file' || field.type === 'image'">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>{{ field.type === 'image' ? 'Click to upload image' : 'Click to upload file' }}</span>
+                </div>
+                <div class="fb-preview-signature" *ngIf="field.type === 'signature'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                  Click to sign
+                </div>
+              </div>
+              <p class="fb-field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
+            </ng-container>
+          </div>
+
+          <!-- Badges -->
+          <div class="fb-field-card__badges">
+            <span class="fb-badge fb-badge--cond" *ngIf="field.conditions.length > 0" title="Has conditions">⚡ {{ field.conditions.length }}</span>
+            <span class="fb-badge fb-badge--val"  *ngIf="field.validation.length > 0"  title="Has validation">✓ {{ field.validation.length }}</span>
+            <span class="fb-badge fb-badge--width">{{ field.width }}</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="fb-field-card__actions" (click)="$event.stopPropagation()">
+            <button class="fb-field-action" (click)="duplicateField(field.id, $event)" title="Duplicate">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button class="fb-field-action fb-field-action--danger" (click)="deleteField(field.id, $event)" title="Delete">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+
+          <div *cdkDragPlaceholder class="fb-drag-placeholder"></div>
+        </div>
+
+      </div><!-- /canvas area -->
+    </main>
+
+    <!-- ════ RIGHT SIDEBAR ════ -->
+    <aside class="fb-sidebar-right" (click)="$event.stopPropagation()">
+      <!-- Tabs -->
+      <div class="fb-right-tabs">
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='props'" (click)="rightTab.set('props')" title="Properties">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='validate'" (click)="rightTab.set('validate')" [class.fb-right-tab--disabled]="!selectedField()" title="Validation">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='logic'" (click)="rightTab.set('logic')" [class.fb-right-tab--disabled]="!selectedField()" title="Conditional Logic">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='theme'" (click)="rightTab.set('theme')" title="Theme">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='analytics'" (click)="rightTab.set('analytics')" title="Analytics">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='integrations'" (click)="rightTab.set('integrations')" title="Integrations">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+        <button class="fb-right-tab" [class.fb-right-tab--active]="rightTab()==='permissions'" (click)="rightTab.set('permissions')" title="Permissions">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </button>
+      </div>
+
+      <div class="fb-right-content">
+
+        <!-- ── PROPERTIES ── -->
+        <ng-container *ngIf="rightTab()==='props'">
+          <!-- Form settings (no field selected) -->
+          <ng-container *ngIf="!selectedField()">
+            <div class="fb-right-section">
+              <p class="fb-right-section__label">Form Settings</p>
+              <div class="fb-prop-row">
+                <label>Title</label>
+                <input [value]="config().title" (input)="patchConfig({title: $any($event.target).value})" />
+              </div>
+              <div class="fb-prop-row">
+                <label>Description</label>
+                <textarea [value]="config().description" (input)="patchConfig({description: $any($event.target).value})" rows="2" placeholder="Brief form description…"></textarea>
+              </div>
+              <div class="fb-prop-row">
+                <label>Submit Button Label</label>
+                <input [value]="config().submitLabel" (input)="patchConfig({submitLabel: $any($event.target).value})" />
+              </div>
+              <div class="fb-prop-row">
+                <label>Success Message</label>
+                <textarea [value]="config().successMessage" (input)="patchConfig({successMessage: $any($event.target).value})" rows="2"></textarea>
+              </div>
+              <div class="fb-prop-toggle-row">
+                <label>Multi-step form</label>
+                <label class="fb-toggle-switch">
+                  <input type="checkbox" [checked]="config().isMultiStep" (change)="patchConfig({isMultiStep: $any($event.target).checked})" />
+                  <span class="fb-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="fb-right-section">
+              <p class="fb-right-section__label">Form Summary</p>
+              <div class="fb-form-stats">
+                <div class="fb-form-stat"><span class="fb-form-stat__val">{{ formStats().fields }}</span><span class="fb-form-stat__lbl">Fields</span></div>
+                <div class="fb-form-stat"><span class="fb-form-stat__val">{{ formStats().steps }}</span><span class="fb-form-stat__lbl">Steps</span></div>
+                <div class="fb-form-stat"><span class="fb-form-stat__val">{{ formStats().required }}</span><span class="fb-form-stat__lbl">Required</span></div>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Field properties (field selected) -->
+          <ng-container *ngIf="selectedField() as f">
+            <div class="fb-right-section">
+              <p class="fb-right-section__label">
+                <span class="fb-field-type-icon" [style.background]="fieldGroupColor(f.type)+'18'" [style.color]="fieldGroupColor(f.type)">{{ fieldIcon(f.type) }}</span>
+                {{ f.type | titlecase }} Field
+              </p>
+              <div class="fb-prop-row" *ngIf="!isLayout(f.type)">
+                <label>Label</label>
+                <input [value]="f.label" (input)="patchField({label: $any($event.target).value})" />
+              </div>
+              <div class="fb-prop-row" *ngIf="f.type === 'heading' || f.type === 'paragraph'">
+                <label>Content</label>
+                <textarea [value]="f.content" (input)="patchField({content: $any($event.target).value})" rows="2"></textarea>
+              </div>
+              <div class="fb-prop-row" *ngIf="f.type === 'heading'">
+                <label>Heading Level</label>
+                <select [value]="f.level" (change)="setHeadingLevel($any($event.target).value)">
+                  <option value="1">H1 — Large</option>
+                  <option value="2">H2 — Medium</option>
+                  <option value="3">H3 — Small</option>
+                </select>
+              </div>
+              <div class="fb-prop-row" *ngIf="!isLayout(f.type) && f.type !== 'radio' && f.type !== 'checkbox' && f.type !== 'toggle' && f.type !== 'rating' && f.type !== 'slider' && f.type !== 'color' && f.type !== 'signature' && f.type !== 'file' && f.type !== 'image'">
+                <label>Placeholder</label>
+                <input [value]="f.placeholder" (input)="patchField({placeholder: $any($event.target).value})" />
+              </div>
+              <div class="fb-prop-row" *ngIf="!isLayout(f.type)">
+                <label>Help Text</label>
+                <input [value]="f.helpText" (input)="patchField({helpText: $any($event.target).value})" placeholder="Optional hint…" />
+              </div>
+              <div class="fb-prop-row" *ngIf="f.type === 'textarea'">
+                <label>Rows</label>
+                <input type="number" [value]="f.rows" (input)="patchField({rows: +$any($event.target).value})" min="2" max="20" />
+              </div>
+              <div class="fb-prop-row" *ngIf="f.type === 'rating'">
+                <label>Max Stars</label>
+                <select [value]="f.maxRating" (change)="patchField({maxRating: +$any($event.target).value})">
+                  <option value="3">3 Stars</option><option value="5">5 Stars</option><option value="10">10 Stars</option>
+                </select>
+              </div>
+              <div class="fb-prop-row" *ngIf="isNumericRange(f.type) && f.type !== 'rating'">
+                <label>Min / Max</label>
+                <div class="fb-prop-two-col">
+                  <input type="number" [value]="f.min" (input)="patchField({min: +$any($event.target).value})" placeholder="Min" />
+                  <input type="number" [value]="f.max" (input)="patchField({max: +$any($event.target).value})" placeholder="Max" />
+                </div>
+              </div>
+              <div class="fb-prop-row" *ngIf="isFileBased(f.type)">
+                <label>Accepted Types</label>
+                <input [value]="f.accept" (input)="patchField({accept: $any($event.target).value})" placeholder=".pdf,.doc,.jpg" />
+              </div>
+              <div class="fb-prop-row" *ngIf="isFileBased(f.type)">
+                <label>Max File Size (MB)</label>
+                <input type="number" [value]="f.maxSize" (input)="patchField({maxSize: +$any($event.target).value})" min="1" max="100" />
+              </div>
+              <!-- Width selector -->
+              <div class="fb-prop-row" *ngIf="!isLayout(f.type)">
+                <label>Width</label>
+                <div class="fb-width-selector">
+                  <button [class.active]="f.width === 'full'"  (click)="patchField({width:'full'})">Full</button>
+                  <button [class.active]="f.width === 'half'"  (click)="patchField({width:'half'})">Half</button>
+                  <button [class.active]="f.width === 'third'" (click)="patchField({width:'third'})">1/3</button>
+                </div>
+              </div>
+              <!-- Required toggle -->
+              <div class="fb-prop-toggle-row" *ngIf="!isLayout(f.type)">
+                <label>Required field</label>
+                <label class="fb-toggle-switch">
+                  <input type="checkbox" [checked]="f.required" (change)="patchField({required: $any($event.target).checked})" />
+                  <span class="fb-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Options editor -->
+            <div class="fb-right-section" *ngIf="needsOptions(f.type)">
+              <div class="fb-right-section__head">
+                <p class="fb-right-section__label">Options</p>
+                <button class="fb-add-mini-btn" (click)="addOption()">+ Add</button>
+              </div>
+              <div class="fb-options-list">
+                <div class="fb-option-row" *ngFor="let opt of f.options; let oi = index">
+                  <input class="fb-option-label" [value]="opt.label" (input)="updateOption(oi, 'label', $any($event.target).value)" placeholder="Label" />
+                  <input class="fb-option-value" [value]="opt.value" (input)="updateOption(oi, 'value', $any($event.target).value)" placeholder="Value" />
+                  <button class="fb-option-del" (click)="deleteOption(oi)" title="Remove">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- ── VALIDATION ── -->
+        <ng-container *ngIf="rightTab()==='validate'">
+          <div class="fb-empty-panel" *ngIf="!selectedField()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <p>Select a field to configure validation rules</p>
+          </div>
+          <ng-container *ngIf="selectedField() as f">
+            <div class="fb-right-section">
+              <div class="fb-right-section__head">
+                <p class="fb-right-section__label">Validation Rules</p>
+                <button class="fb-add-mini-btn" (click)="addValidation()">+ Add Rule</button>
+              </div>
+              <div class="fb-empty-panel fb-empty-panel--sm" *ngIf="f.validation.length === 0">
+                <p>No rules yet. Click "+ Add Rule" to start.</p>
+              </div>
+              <div class="fb-validation-rule" *ngFor="let rule of f.validation; let ri = index">
+                <div class="fb-validation-rule__head">
+                  <select [value]="rule.type" (change)="updateValidation(ri, {type: $any($event.target).value})">
+                    <option value="required">Required</option>
+                    <option value="minLength">Min Length</option>
+                    <option value="maxLength">Max Length</option>
+                    <option value="min">Min Value</option>
+                    <option value="max">Max Value</option>
+                    <option value="pattern">Pattern (RegEx)</option>
+                    <option value="email">Email Format</option>
+                    <option value="url">URL Format</option>
+                  </select>
+                  <label class="fb-toggle-switch fb-toggle-switch--sm">
+                    <input type="checkbox" [checked]="rule.enabled" (change)="updateValidation(ri, {enabled: $any($event.target).checked})" />
+                    <span class="fb-toggle-slider"></span>
+                  </label>
+                  <button class="fb-option-del" (click)="deleteValidation(ri)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <input *ngIf="rule.type !== 'required' && rule.type !== 'email' && rule.type !== 'url'" class="fb-prop-input" [value]="rule.value" (input)="updateValidation(ri, {value: $any($event.target).value})" placeholder="Value…" />
+                <input class="fb-prop-input" [value]="rule.message" (input)="updateValidation(ri, {message: $any($event.target).value})" placeholder="Error message…" />
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- ── LOGIC ── -->
+        <ng-container *ngIf="rightTab()==='logic'">
+          <div class="fb-empty-panel" *ngIf="!selectedField()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <p>Select a field to add conditional logic</p>
+          </div>
+          <ng-container *ngIf="selectedField() as f">
+            <div class="fb-right-section">
+              <div class="fb-right-section__head">
+                <p class="fb-right-section__label">Conditional Logic</p>
+                <button class="fb-add-mini-btn" (click)="addCondition()">+ Add Condition</button>
+              </div>
+              <p class="fb-right-hint" *ngIf="f.conditions.length === 0">Control this field's visibility based on other field values.</p>
+              <div class="fb-condition-rule" *ngFor="let cond of f.conditions; let ci = index">
+                <div class="fb-condition-rule__row">
+                  <label class="fb-cond-label">When</label>
+                  <select [value]="cond.sourceFieldId" (change)="updateCondition(ci, {sourceFieldId: $any($event.target).value})">
+                    <option *ngFor="let other of allFields()" [value]="other.id" [disabled]="other.id === f.id">{{ other.label }}</option>
+                  </select>
+                </div>
+                <div class="fb-condition-rule__row">
+                  <label class="fb-cond-label">Is</label>
+                  <select [value]="cond.operator" (change)="updateCondition(ci, {operator: $any($event.target).value})">
+                    <option *ngFor="let op of OPERATORS" [value]="op.v">{{ op.l }}</option>
+                  </select>
+                </div>
+                <div class="fb-condition-rule__row" *ngIf="cond.operator !== 'is_empty' && cond.operator !== 'is_not_empty'">
+                  <label class="fb-cond-label">Value</label>
+                  <input [value]="cond.value" (input)="updateCondition(ci, {value: $any($event.target).value})" placeholder="Value…" />
+                </div>
+                <div class="fb-condition-rule__row">
+                  <label class="fb-cond-label">Then</label>
+                  <select [value]="cond.action" (change)="updateCondition(ci, {action: $any($event.target).value})">
+                    <option *ngFor="let a of ACTIONS" [value]="a.v">{{ a.l }}</option>
+                  </select>
+                </div>
+                <button class="fb-cond-del" (click)="deleteCondition(ci)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Remove condition
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- ── THEME ── -->
+        <ng-container *ngIf="rightTab()==='theme'">
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Colors</p>
+            <div class="fb-prop-row">
+              <label>Primary Color</label>
+              <div class="fb-color-row">
+                <input type="color" [value]="config().theme.primaryColor" (input)="patchTheme({primaryColor: $any($event.target).value})" />
+                <input class="fb-color-hex" [value]="config().theme.primaryColor" (input)="patchTheme({primaryColor: $any($event.target).value})" />
+              </div>
+            </div>
+            <div class="fb-prop-row">
+              <label>Label Color</label>
+              <div class="fb-color-row">
+                <input type="color" [value]="config().theme.labelColor" (input)="patchTheme({labelColor: $any($event.target).value})" />
+                <input class="fb-color-hex" [value]="config().theme.labelColor" (input)="patchTheme({labelColor: $any($event.target).value})" />
+              </div>
+            </div>
+            <div class="fb-prop-row">
+              <label>Background Color</label>
+              <div class="fb-color-row">
+                <input type="color" [value]="config().theme.bgColor" (input)="patchTheme({bgColor: $any($event.target).value})" />
+                <input class="fb-color-hex" [value]="config().theme.bgColor" (input)="patchTheme({bgColor: $any($event.target).value})" />
+              </div>
+            </div>
+            <div class="fb-prop-row">
+              <label>Border Color</label>
+              <div class="fb-color-row">
+                <input type="color" [value]="config().theme.borderColor" (input)="patchTheme({borderColor: $any($event.target).value})" />
+                <input class="fb-color-hex" [value]="config().theme.borderColor" (input)="patchTheme({borderColor: $any($event.target).value})" />
+              </div>
+            </div>
+          </div>
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Typography & Shape</p>
+            <div class="fb-prop-row">
+              <label>Font Family</label>
+              <select [value]="config().theme.fontFamily" (change)="patchTheme({fontFamily: $any($event.target).value})">
+                <option *ngFor="let f of FONT_OPTIONS" [value]="f">{{ f.split(',')[0] }}</option>
+              </select>
+            </div>
+            <div class="fb-prop-row">
+              <label>Font Size</label>
+              <select [value]="config().theme.fontSize" (change)="patchTheme({fontSize: $any($event.target).value})">
+                <option *ngFor="let s of FONT_SIZE_OPTIONS" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="fb-prop-row">
+              <label>Border Radius</label>
+              <div class="fb-radius-selector">
+                <button *ngFor="let r of RADIUS_OPTIONS" [class.active]="config().theme.borderRadius === r.v" (click)="patchTheme({borderRadius: r.v})">{{ r.l }}</button>
+              </div>
+            </div>
+          </div>
+          <!-- Live preview swatch -->
+          <div class="fb-theme-preview" [style.font-family]="config().theme.fontFamily" [style.font-size]="config().theme.fontSize" [style.background]="config().theme.bgColor">
+            <label [style.color]="config().theme.labelColor" style="font-size:12px;font-weight:600;">Sample Label</label>
+            <input class="fb-theme-preview__input" placeholder="Sample input…"
+              [style.border-color]="config().theme.borderColor"
+              [style.border-radius]="config().theme.borderRadius" />
+            <button class="fb-theme-preview__btn"
+              [style.background]="config().theme.primaryColor"
+              [style.border-radius]="config().theme.borderRadius">Submit</button>
+          </div>
+        </ng-container>
+
+        <!-- ── ANALYTICS ── -->
+        <ng-container *ngIf="rightTab()==='analytics'">
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Form Insights</p>
+            <div class="fb-analytics-grid">
+              <div class="fb-analytics-stat fb-analytics-stat--indigo">
+                <div class="fb-analytics-stat__val">{{ mockAnalytics().views | number }}</div>
+                <div class="fb-analytics-stat__lbl">Total Views</div>
+              </div>
+              <div class="fb-analytics-stat fb-analytics-stat--teal">
+                <div class="fb-analytics-stat__val">{{ mockAnalytics().completions | number }}</div>
+                <div class="fb-analytics-stat__lbl">Completions</div>
+              </div>
+              <div class="fb-analytics-stat fb-analytics-stat--green">
+                <div class="fb-analytics-stat__val">{{ mockAnalytics().convRate }}</div>
+                <div class="fb-analytics-stat__lbl">Conversion</div>
+              </div>
+              <div class="fb-analytics-stat fb-analytics-stat--amber">
+                <div class="fb-analytics-stat__val">{{ mockAnalytics().avgTime }}</div>
+                <div class="fb-analytics-stat__lbl">Avg. Time</div>
+              </div>
+            </div>
+          </div>
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Step Drop-off</p>
+            <div class="fb-dropoff-list">
+              <div class="fb-dropoff-row" *ngFor="let d of mockAnalytics().dropOff">
+                <span class="fb-dropoff-label">{{ d.step }}</span>
+                <div class="fb-dropoff-bar-wrap">
+                  <div class="fb-dropoff-bar" [style.width.%]="d.pct"></div>
+                </div>
+                <span class="fb-dropoff-pct">{{ d.pct }}%</span>
+              </div>
+            </div>
+          </div>
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Device Breakdown</p>
+            <div class="fb-device-list">
+              <div class="fb-device-row" *ngFor="let d of mockAnalytics().devices">
+                <span class="fb-device-dot" [style.background]="d.c"></span>
+                <span class="fb-device-label">{{ d.l }}</span>
+                <div class="fb-device-bar-wrap">
+                  <div class="fb-device-bar" [style.width.%]="d.pct" [style.background]="d.c"></div>
+                </div>
+                <span class="fb-device-pct">{{ d.pct }}%</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ── INTEGRATIONS ── -->
+        <ng-container *ngIf="rightTab()==='integrations'">
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Connect Services</p>
+            <p class="fb-right-hint">Automatically send form data to external services when a response is submitted.</p>
+            <div class="fb-integration-card" *ngFor="let int of INTEGRATIONS_CATALOG">
+              <div class="fb-integration-card__icon">{{ int.icon }}</div>
+              <div class="fb-integration-card__info">
+                <span class="fb-integration-card__name">{{ int.name }}</span>
+                <span class="fb-integration-card__type">{{ int.type }}</span>
+              </div>
+              <label class="fb-toggle-switch">
+                <input type="checkbox" [checked]="isIntegrationEnabled(int.type)" (change)="toggleIntegration(int.type)" />
+                <span class="fb-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="fb-right-section" *ngIf="config().integrations.length > 0">
+            <p class="fb-right-section__label">Active Integrations</p>
+            <div *ngFor="let int of config().integrations" class="fb-active-integration">
+              <div class="fb-active-integration__head">
+                <span>{{ int.icon }} {{ int.name }}</span>
+                <span class="fb-badge fb-badge--green">Active</span>
+              </div>
+              <ng-container *ngIf="int.type === 'webhook' || int.type === 'slack' || int.type === 'zapier'">
+                <input class="fb-prop-input" [value]="int.config['url'] || int.config['webhookUrl'] || ''" placeholder="Webhook URL…" readonly />
+              </ng-container>
+              <ng-container *ngIf="int.type === 'email'">
+                <input class="fb-prop-input" [value]="int.config['to'] || ''" placeholder="Recipient email…" readonly />
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ── PERMISSIONS ── -->
+        <ng-container *ngIf="rightTab()==='permissions'">
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Role-Based Access</p>
+            <p class="fb-right-hint">Control who can view, submit, and manage this form.</p>
+            <div class="fb-permission-row" *ngFor="let role of ['Admin','Editor','Viewer','Anonymous']">
+              <div class="fb-permission-role">
+                <div class="fb-permission-avatar">{{ role.charAt(0) }}</div>
+                <span>{{ role }}</span>
+              </div>
+              <div class="fb-permission-checks">
+                <label class="fb-perm-check"><input type="checkbox" [checked]="true" /> View</label>
+                <label class="fb-perm-check"><input type="checkbox" [checked]="role !== 'Anonymous'" /> Submit</label>
+                <label class="fb-perm-check"><input type="checkbox" [checked]="role === 'Admin' || role === 'Editor'" /> Edit</label>
+              </div>
+            </div>
+          </div>
+          <div class="fb-right-section">
+            <p class="fb-right-section__label">Response Settings</p>
+            <div class="fb-prop-toggle-row">
+              <label>Allow multiple submissions</label>
+              <label class="fb-toggle-switch"><input type="checkbox" /><span class="fb-toggle-slider"></span></label>
+            </div>
+            <div class="fb-prop-toggle-row">
+              <label>Require login to submit</label>
+              <label class="fb-toggle-switch"><input type="checkbox" [checked]="true" /><span class="fb-toggle-slider"></span></label>
+            </div>
+            <div class="fb-prop-toggle-row">
+              <label>Show submission count</label>
+              <label class="fb-toggle-switch"><input type="checkbox" /><span class="fb-toggle-slider"></span></label>
+            </div>
+          </div>
+        </ng-container>
+
+      </div><!-- /right-content -->
+    </aside>
+
+  </div><!-- /body -->
+</div><!-- /root -->
+
+<!-- ══════════ PREVIEW OVERLAY ══════════ -->
+<div class="fb-preview-overlay" *ngIf="showPreview()" (click)="closePreview()">
+  <div class="fb-preview-container" (click)="$event.stopPropagation()">
+
+    <!-- Preview toolbar -->
+    <div class="fb-preview-toolbar">
+      <div class="fb-preview-toolbar__left">
+        <span class="fb-preview-title">{{ config().title }}</span>
+        <span class="fb-preview-draft" *ngIf="config().isDraft">Draft</span>
+      </div>
+      <div class="fb-device-switcher">
+        <button class="fb-device-btn" [class.fb-device-btn--active]="previewDevice()==='desktop'" (click)="previewDevice.set('desktop')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        </button>
+        <button class="fb-device-btn" [class.fb-device-btn--active]="previewDevice()==='tablet'" (click)="previewDevice.set('tablet')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </button>
+        <button class="fb-device-btn" [class.fb-device-btn--active]="previewDevice()==='mobile'" (click)="previewDevice.set('mobile')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </button>
+      </div>
+      <button class="fb-preview-close" (click)="closePreview()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Device frame -->
+    <div class="fb-preview-frame-wrap">
+      <div class="fb-preview-frame"
+        [class.fb-preview-frame--desktop]="previewDevice()==='desktop'"
+        [class.fb-preview-frame--tablet]="previewDevice()==='tablet'"
+        [class.fb-preview-frame--mobile]="previewDevice()==='mobile'">
+
+        <div class="fb-preview-form-scroll">
+          <div class="fb-preview-form" [style.background]="config().theme.bgColor" [style.font-family]="config().theme.fontFamily" [style.font-size]="config().theme.fontSize">
+
+            <!-- Form header -->
+            <div class="fb-preview-form-header">
+              <h2 class="fb-preview-form-title" [style.color]="config().theme.labelColor">{{ config().title }}</h2>
+              <p class="fb-preview-form-desc" *ngIf="config().description">{{ config().description }}</p>
+              <!-- Multi-step progress -->
+              <div class="fb-preview-progress" *ngIf="config().isMultiStep && config().steps.length > 1">
+                <div class="fb-preview-progress-bar" [style.width.%]="((previewStep() + 1) / config().steps.length) * 100" [style.background]="config().theme.primaryColor"></div>
+              </div>
+              <div class="fb-preview-steps-label" *ngIf="config().isMultiStep && config().steps.length > 1">
+                Step {{ previewStep() + 1 }} of {{ config().steps.length }}: <strong>{{ previewCurrentStep.title }}</strong>
+              </div>
+            </div>
+
+            <!-- Fields -->
+            <div class="fb-preview-fields">
+              <ng-container *ngFor="let field of previewCurrentStep.fields">
+                <!-- Layout -->
+                <ng-container [ngSwitch]="field.type">
+                  <ng-container *ngSwitchCase="'heading'">
+                    <h2 *ngIf="field.level===2" class="fb-pv-heading" [style.color]="config().theme.labelColor">{{ field.content }}</h2>
+                    <h3 *ngIf="field.level===3" class="fb-pv-subheading" [style.color]="config().theme.labelColor">{{ field.content }}</h3>
+                    <h1 *ngIf="field.level===1" class="fb-pv-bigheading" [style.color]="config().theme.labelColor">{{ field.content }}</h1>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'paragraph'">
+                    <p class="fb-pv-paragraph">{{ field.content }}</p>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'divider'">
+                    <hr class="fb-pv-divider" [style.border-color]="config().theme.borderColor" />
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'spacer'">
+                    <div class="fb-pv-spacer"></div>
+                  </ng-container>
+                  <!-- Regular fields -->
+                  <ng-container *ngSwitchDefault>
+                    <div class="fb-pv-field" [class.fb-pv-field--half]="field.width==='half'" [class.fb-pv-field--third]="field.width==='third'">
+                      <label class="fb-pv-label" [style.color]="config().theme.labelColor">
+                        {{ field.label }}<span *ngIf="field.required" style="color:#dc2626;margin-left:2px">*</span>
+                      </label>
+                      <!-- Inputs -->
+                      <input *ngIf="['text','email','number','tel','url','password','date','time','datetime'].includes(field.type)"
+                        class="fb-pv-input" [type]="field.type" [placeholder]="field.placeholder"
+                        [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius" />
+                      <textarea *ngIf="field.type==='textarea'" class="fb-pv-input fb-pv-textarea"
+                        [rows]="field.rows" [placeholder]="field.placeholder"
+                        [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius"></textarea>
+                      <select *ngIf="field.type==='select' || field.type==='multiselect'" class="fb-pv-input"
+                        [attr.multiple]="field.type==='multiselect' ? true : null"
+                        [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius">
+                        <option value="" disabled selected>Select…</option>
+                        <option *ngFor="let o of field.options">{{ o.label }}</option>
+                      </select>
+                      <div class="fb-pv-radio-group" *ngIf="field.type==='radio'">
+                        <label class="fb-pv-radio-item" *ngFor="let o of field.options">
+                          <input type="radio" [name]="field.id" /><span>{{ o.label }}</span>
+                        </label>
+                      </div>
+                      <div class="fb-pv-checkbox-group" *ngIf="field.type==='checkbox'">
+                        <label class="fb-pv-checkbox-item" *ngFor="let o of field.options">
+                          <input type="checkbox" /><span>{{ o.label }}</span>
+                        </label>
+                      </div>
+                      <div class="fb-pv-toggle-row" *ngIf="field.type==='toggle'">
+                        <label class="fb-toggle-switch"><input type="checkbox" /><span class="fb-toggle-slider"></span></label>
+                        <span class="fb-pv-toggle-label">{{ field.label }}</span>
+                      </div>
+                      <div class="fb-pv-rating" *ngIf="field.type==='rating'">
+                        <span class="fb-pv-star" *ngFor="let s of stars(field.maxRating || 5)" [style.color]="config().theme.primaryColor">★</span>
+                      </div>
+                      <input *ngIf="field.type==='slider'" type="range" class="fb-pv-slider" [min]="field.min" [max]="field.max" [step]="field.step" />
+                      <input *ngIf="field.type==='color'" type="color" class="fb-pv-color" />
+                      <div *ngIf="field.type==='file' || field.type==='image'" class="fb-pv-file-drop"
+                        [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span>Drop file here or <span [style.color]="config().theme.primaryColor" style="font-weight:600;cursor:pointer">browse</span></span>
+                        <span class="fb-pv-file-hint" *ngIf="field.accept">Allowed: {{ field.accept }}</span>
+                      </div>
+                      <div *ngIf="field.type==='signature'" class="fb-pv-signature-box"
+                        [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius">
+                        <span>Click or draw to sign</span>
+                      </div>
+                      <p class="fb-pv-help" *ngIf="field.helpText">{{ field.helpText }}</p>
+                    </div>
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </div>
+
+            <!-- Navigation -->
+            <div class="fb-preview-nav">
+              <button *ngIf="previewStep() > 0" class="fb-pv-btn fb-pv-btn--ghost" (click)="previewPrev()"
+                [style.border-color]="config().theme.borderColor" [style.border-radius]="config().theme.borderRadius">
+                ← Previous
+              </button>
+              <button *ngIf="previewStep() < config().steps.length - 1" class="fb-pv-btn" (click)="previewNext()"
+                [style.background]="config().theme.primaryColor" [style.border-radius]="config().theme.borderRadius">
+                Next Step →
+              </button>
+              <button *ngIf="previewStep() === config().steps.length - 1" class="fb-pv-btn" (click)="closePreview()"
+                [style.background]="config().theme.primaryColor" [style.border-radius]="config().theme.borderRadius">
+                {{ config().submitLabel || 'Submit' }}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,581 @@
+<div class="org-root" [class.dark]="theme.isDark()">
+
+  <!-- ══════════ NAVBAR ══════════ -->
+  <header class="org-navbar">
+    <div class="org-navbar__brand">
+      <div class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="org-navbar__title">OrgVault</span>
+    </div>
+
+    <div class="org-navbar__actions">
+      <button class="icon-btn icon-btn--back" routerLink="/dashboard">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Dashboard
+      </button>
+      <div class="lang-switcher">
+        <button class="lang-btn" [class.lang-btn--active]="i18n.lang()==='en'" (click)="i18n.switchLang('en')">English</button>
+        <button class="lang-btn" [class.lang-btn--active]="i18n.lang()==='ta'" (click)="i18n.switchLang('ta')">Tamil</button>
+        <button class="lang-btn" [class.lang-btn--active]="i18n.lang()==='fr'" (click)="i18n.switchLang('fr')">French</button>
+      </div>
+
+      <button class="icon-btn" routerLink="/form-builder">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        {{ i18n.t('NAV_FORM_BUILDER') }}
+      </button>
+
+      <button class="icon-btn" (click)="showSettings = true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        {{ i18n.t('NAV_SETTINGS') }}
+      </button>
+
+      <button class="logout-btn" (click)="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        {{ i18n.t('NAV_LOGOUT') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main class="org-main">
+
+    <!-- ── Toolbar ── -->
+    <div class="org-toolbar">
+      <div class="org-toolbar__left">
+        <h1 class="org-page-title">{{ i18n.t('TITLE') }}</h1>
+        <span class="record-badge">{{ sortedFiltered().length | number }} records</span>
+      </div>
+      <div class="org-toolbar__right">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input class="search-input" [placeholder]="i18n.t('PLACEHOLDER')"
+            [formControl]="searchCtrl" (focus)="showDropdown=true" (blur)="showDropdown=false"
+            (keydown.enter)="search()" />
+          <div class="autocomplete" *ngIf="showDropdown && suggestions.length">
+            <div *ngFor="let s of suggestions" class="autocomplete__item" (mousedown)="selectSuggestion(s.name)">
+              <span class="autocomplete__avatar">{{ s.name.charAt(0) }}</span>
+              {{ s.name }}
+            </div>
+          </div>
+        </div>
+        <button class="action-btn action-btn--search" (click)="search()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          {{ i18n.t('SEARCH') }}
+        </button>
+        <button class="action-btn action-btn--ghost" (click)="reset()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          {{ i18n.t('RESET') }}
+        </button>
+        <button class="action-btn action-btn--outline" (click)="exportCsv()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          {{ i18n.t('FB_EXPORT') }}
+        </button>
+        <button class="action-btn action-btn--primary" (click)="openAddModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          {{ i18n.t('ORG_ADD_NEW') }}
+        </button>
+        <div class="view-toggle">
+          <button class="view-btn" [class.view-btn--active]="viewMode() === 'table'" (click)="viewMode.set('table')" title="Table view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          </button>
+          <button class="view-btn" [class.view-btn--active]="viewMode() === 'card'" (click)="viewMode.set('card')" title="Card view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stats bar ── -->
+    <div class="stats-bar">
+      <div class="metric-card">
+        <div class="metric-card__icon metric-card__icon--indigo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <div class="metric-card__value">{{ orgStats().total | number }}</div>
+          <div class="metric-card__label">{{ i18n.t('ORG_TOTAL') }} {{ i18n.t('ORG_TITLE') }}</div>
+        </div>
+        <div class="metric-card__sparkline">
+          <div class="sparkline-bar" style="height:40%"></div>
+          <div class="sparkline-bar" style="height:60%"></div>
+          <div class="sparkline-bar" style="height:45%"></div>
+          <div class="sparkline-bar" style="height:80%"></div>
+          <div class="sparkline-bar" style="height:65%"></div>
+          <div class="sparkline-bar" style="height:100%"></div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card__icon metric-card__icon--green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <div class="metric-card__value">{{ orgStats().active | number }}</div>
+          <div class="metric-card__label">{{ i18n.t('ORG_ACTIVE_COUNT') }}</div>
+        </div>
+        <div class="metric-card__badge metric-card__badge--green">
+          {{ (orgStats().active / orgStats().total * 100 | number:'1.0-0') }}%
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card__icon metric-card__icon--blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <div class="metric-card__value">{{ orgStats().it | number }}</div>
+          <div class="metric-card__label">IT Sector</div>
+        </div>
+        <div class="metric-card__badge metric-card__badge--blue">
+          {{ (orgStats().it / orgStats().total * 100 | number:'1.0-0') }}%
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card__icon metric-card__icon--teal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <div class="metric-card__value">{{ orgStats().healthcare | number }}</div>
+          <div class="metric-card__label">Healthcare</div>
+        </div>
+        <div class="metric-card__badge metric-card__badge--teal">
+          {{ (orgStats().healthcare / orgStats().total * 100 | number:'1.0-0') }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Filter chips ── -->
+    <div class="filter-row">
+      <div class="filter-chips">
+        <span class="filter-label">{{ i18n.t('ORG_TYPE') }}:</span>
+        <button class="chip" [class.chip--active]="!typeFilter()" (click)="toggleTypeFilter('')">{{ i18n.t('ALL') }}</button>
+        <button class="chip chip--it"          [class.chip--active]="typeFilter()==='IT'"            (click)="toggleTypeFilter('IT')">IT</button>
+        <button class="chip chip--health"      [class.chip--active]="typeFilter()==='Healthcare'"    (click)="toggleTypeFilter('Healthcare')">Healthcare</button>
+        <button class="chip chip--finance"     [class.chip--active]="typeFilter()==='Finance'"       (click)="toggleTypeFilter('Finance')">Finance</button>
+        <button class="chip chip--education"   [class.chip--active]="typeFilter()==='Education'"     (click)="toggleTypeFilter('Education')">Education</button>
+        <button class="chip chip--manufacture" [class.chip--active]="typeFilter()==='Manufacturing'" (click)="toggleTypeFilter('Manufacturing')">Manufacturing</button>
+        <span class="filter-divider"></span>
+        <span class="filter-label">{{ i18n.t('ORG_STATUS') }}:</span>
+        <button class="chip chip--status-active"   [class.chip--active]="statusFilter()==='Active'"   (click)="toggleStatusFilter('Active')">● {{ i18n.t('ORG_STATUS_ACTIVE') }}</button>
+        <button class="chip chip--status-inactive" [class.chip--active]="statusFilter()==='Inactive'" (click)="toggleStatusFilter('Inactive')">● {{ i18n.t('ORG_STATUS_INACTIVE') }}</button>
+        <button class="chip chip--status-pending"  [class.chip--active]="statusFilter()==='Pending'"  (click)="toggleStatusFilter('Pending')">● {{ i18n.t('ORG_STATUS_PENDING') }}</button>
+      </div>
+    </div>
+
+    <!-- ── Bulk actions bar ── -->
+    <div class="bulk-bar" *ngIf="selectedIds().size > 0">
+      <span class="bulk-bar__count">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ selectedIds().size }} {{ i18n.t('ORG_SELECTED') }}
+      </span>
+      <div class="bulk-bar__actions">
+        <button class="bulk-btn bulk-btn--danger" (click)="showBulkConfirm = true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          {{ i18n.t('ORG_DELETE') }} {{ selectedIds().size }}
+        </button>
+        <button class="bulk-btn" (click)="exportCsv()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          {{ i18n.t('FB_EXPORT') }}
+        </button>
+        <button class="bulk-btn bulk-btn--ghost" (click)="clearSelection()">{{ i18n.t('ORG_CLEAR_FILTERS') }}</button>
+      </div>
+    </div>
+
+    <!-- ── Loading bar ── -->
+    <div class="loading-bar" *ngIf="loading()">
+      <div class="loading-bar__track"></div>
+    </div>
+
+    <!-- ══════ AG GRID TABLE VIEW ══════ -->
+    <ng-container *ngIf="viewMode() === 'table'">
+      <div class="ag-grid-wrapper">
+        <ag-grid-angular
+          class="ag-theme-alpine org-ag-grid"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [rowData]="sortedFiltered()"
+          [rowSelection]="rowSelection"
+          [context]="gridContext"
+          [animateRows]="true"
+          [suppressRowClickSelection]="true"
+          [suppressCellFocus]="true"
+          [rowHeight]="52"
+          [headerHeight]="44"
+          [getRowId]="getRowId"
+          [pagination]="true"
+          [paginationPageSize]="pageSize()"
+          [suppressPaginationPanel]="true"
+          domLayout="autoHeight"
+          (gridReady)="onGridReady($event)"
+          (selectionChanged)="onSelectionChanged()"
+          (rowClicked)="onRowClicked($event)"
+          (paginationChanged)="onPaginationChanged()"
+        />
+
+        <div class="ag-empty-state" *ngIf="!loading() && sortedFiltered().length === 0">
+          <div class="empty-state__icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+          <p class="empty-state__title">{{ i18n.t('ORG_EMPTY_TITLE') }}</p>
+          <p class="empty-state__sub">{{ i18n.t('ORG_EMPTY_SUB') }}</p>
+          <button class="action-btn action-btn--ghost" style="margin-top:8px" (click)="reset()">{{ i18n.t('ORG_CLEAR_FILTERS') }}</button>
+        </div>
+      </div>
+
+      <!-- ── Pagination bar (table) ── -->
+      <div class="pagination-bar" *ngIf="totalPages() > 1">
+        <div class="pagination-progress-bar">
+          <div class="pagination-progress-fill" [style.width]="((currPage() + 1) / totalPages() * 100) + '%'"></div>
+        </div>
+        <div class="pagination-inner">
+          <div class="pagination-info">
+            Showing <span class="pagination-badge">{{ startRow | number }}–{{ endRow | number }}</span>
+            of <strong>{{ totalRows() | number }}</strong> records
+          </div>
+          <div class="pagination-nav">
+            <button class="page-nav-btn" (click)="goToPage(0)" [disabled]="currPage() === 0" title="First page">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+            </button>
+            <button class="page-nav-btn" (click)="goToPage(currPage() - 1)" [disabled]="currPage() === 0" title="Previous">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="page-numbers pagination-range">
+              <ng-container *ngFor="let p of visiblePages()">
+                <span *ngIf="p === null" class="page-ellipsis">…</span>
+                <button *ngIf="p !== null" class="page-num-btn" [class.page-num-btn--active]="p === currPage()" (click)="goToPage(p)">{{ p + 1 }}</button>
+              </ng-container>
+            </div>
+            <button class="page-nav-btn" (click)="goToPage(currPage() + 1)" [disabled]="currPage() >= totalPages() - 1" title="Next">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="page-nav-btn" (click)="goToPage(totalPages() - 1)" [disabled]="currPage() >= totalPages() - 1" title="Last page">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            </button>
+          </div>
+          <div class="pagination-right">
+            <div class="page-size-chips">
+              <button *ngFor="let s of pageSizes" class="size-chip" [class.size-chip--active]="pageSize() === s" (click)="setPageSize(s)">{{ s }}</button>
+            </div>
+            <div class="page-jump">
+              <span>Go to</span>
+              <input class="page-jump-input" type="number" [value]="currPage() + 1" min="1" [max]="totalPages()"
+                (keydown.enter)="jumpGridPage($any($event.target).value)" />
+              <span class="page-jump-of">of {{ totalPages() | number }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ══════ CARD VIEW ══════ -->
+    <ng-container *ngIf="viewMode() === 'card'">
+      <div class="org-cards" *ngIf="sortedFiltered().length > 0">
+        <div class="org-card" *ngFor="let row of cardRows(); trackBy: trackById" (click)="openDetail(row)">
+          <div class="org-card__header" [style.background]="'linear-gradient(135deg, ' + typeColor(row.orgType) + '18, ' + typeColor(row.orgType) + '08)'">
+            <div class="org-card__avatar" [style.background]="typeColor(row.orgType) + '22'" [style.color]="typeColor(row.orgType)">
+              {{ row.name.charAt(0) }}
+            </div>
+            <div class="org-card__title-wrap">
+              <div class="org-card__name">{{ row.name }}</div>
+              <span class="type-badge" [style.background]="typeColor(row.orgType) + '15'" [style.color]="typeColor(row.orgType)" [style.border-color]="typeColor(row.orgType) + '40'">{{ row.orgType }}</span>
+            </div>
+            <span class="status-pill org-card__status"
+              [class.status-pill--active]="row.status === 'Active'"
+              [class.status-pill--inactive]="row.status === 'Inactive'"
+              [class.status-pill--pending]="row.status === 'Pending'">
+              <span class="status-dot"></span>{{ row.status }}
+            </span>
+          </div>
+          <div class="org-card__body">
+            <div class="org-card__field">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8"/></svg>
+              <span>{{ row.contact }}</span>
+            </div>
+            <div class="org-card__field" *ngIf="row.employees">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>{{ row.employees | number }} employees</span>
+            </div>
+            <div class="org-card__field">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>{{ row.createdOn }}</span>
+            </div>
+          </div>
+          <div class="org-card__footer" (click)="$event.stopPropagation()">
+            <button class="card-btn" (click)="openPreview(row, $event)">{{ i18n.t('ORG_VIEW') }}</button>
+            <button class="card-btn" (click)="openDetail(row)">{{ i18n.t('DETAIL_OVERVIEW') }}</button>
+            <button class="card-btn card-btn--danger" (click)="confirmDelete(row.id, $event)">{{ i18n.t('ORG_DELETE') }}</button>
+          </div>
+        </div>
+      </div>
+      <div class="org-cards-empty" *ngIf="!loading() && sortedFiltered().length === 0">
+        <div class="empty-state">
+          <p class="empty-state__title">{{ i18n.t('ORG_EMPTY_TITLE') }}</p>
+          <button class="action-btn action-btn--ghost" (click)="reset()">{{ i18n.t('ORG_CLEAR_FILTERS') }}</button>
+        </div>
+      </div>
+
+      <!-- ── Pagination bar (card) ── -->
+      <div class="pagination-bar" *ngIf="cardTotalPages() > 1">
+        <div class="pagination-progress-bar">
+          <div class="pagination-progress-fill" [style.width]="(cardPage() / cardTotalPages() * 100) + '%'"></div>
+        </div>
+        <div class="pagination-inner">
+          <div class="pagination-info">
+            Showing <span class="pagination-badge">{{ ((cardPage() - 1) * pageSize() + 1) | number }}–{{ (cardPage() * pageSize() < sortedFiltered().length ? cardPage() * pageSize() : sortedFiltered().length) | number }}</span>
+            of <strong>{{ sortedFiltered().length | number }}</strong> records
+          </div>
+          <div class="pagination-nav">
+            <button class="page-nav-btn" (click)="cardPage.set(1)" [disabled]="cardPage() === 1" title="First page">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+            </button>
+            <button class="page-nav-btn" (click)="cardPage.set(cardPage() - 1)" [disabled]="cardPage() === 1" title="Previous">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="page-numbers pagination-range">
+              <ng-container *ngFor="let p of cardVisiblePages()">
+                <span *ngIf="p === null" class="page-ellipsis">…</span>
+                <button *ngIf="p !== null" class="page-num-btn" [class.page-num-btn--active]="p === cardPage()" (click)="cardPage.set(p)">{{ p }}</button>
+              </ng-container>
+            </div>
+            <button class="page-nav-btn" (click)="cardPage.set(cardPage() + 1)" [disabled]="cardPage() >= cardTotalPages()" title="Next">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="page-nav-btn" (click)="cardPage.set(cardTotalPages())" [disabled]="cardPage() >= cardTotalPages()" title="Last page">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            </button>
+          </div>
+          <div class="pagination-right">
+            <div class="page-size-chips">
+              <button *ngFor="let s of pageSizes" class="size-chip" [class.size-chip--active]="pageSize() === s" (click)="setPageSize(s)">{{ s }}</button>
+            </div>
+            <div class="page-jump">
+              <span>Go to</span>
+              <input class="page-jump-input" type="number" [value]="cardPage()" min="1" [max]="cardTotalPages()"
+                (keydown.enter)="jumpCardPage($any($event.target).value)" />
+              <span class="page-jump-of">of {{ cardTotalPages() | number }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </main>
+</div>
+
+<!-- ══════════ SETTINGS DRAWER ══════════ -->
+<div class="drawer-backdrop" *ngIf="showSettings" (click)="showSettings=false"></div>
+<aside class="settings-drawer" [class.settings-drawer--open]="showSettings">
+  <div class="drawer-header">
+    <span class="drawer-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      {{ i18n.t('SETTINGS') }}
+    </span>
+    <button class="drawer-close" (click)="showSettings=false">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <p class="drawer-section__label">{{ i18n.t('THEME') }}</p>
+      <div class="swatch-grid">
+        <button class="swatch" style="--c:#6366f1" (click)="theme.setTheme('default')">Indigo</button>
+        <button class="swatch" style="--c:#2563eb" (click)="theme.setTheme('brand')">Brand</button>
+        <button class="swatch" style="--c:#0d9488" (click)="theme.setTheme('teal')">Teal</button>
+        <button class="swatch" style="--c:#e11d48" (click)="theme.setTheme('rose')">Rose</button>
+        <button class="swatch" style="--c:#7c3aed" (click)="theme.setTheme('purple')">Purple</button>
+        <button class="swatch" style="--c:#f59e0b" (click)="theme.setTheme('amber')">Amber</button>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <p class="drawer-section__label">{{ i18n.t('SCHEME') }}</p>
+      <div class="scheme-row">
+        <button class="scheme-btn" (click)="theme.setScheme('light')">☀ {{ i18n.t('LIGHT') }}</button>
+        <button class="scheme-btn" (click)="theme.setScheme('dark')">☾ {{ i18n.t('DARK') }}</button>
+        <button class="scheme-btn" (click)="theme.setScheme('auto')">⊙ {{ i18n.t('AUTO') }}</button>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <p class="drawer-section__label">{{ i18n.t('TODOS') }}</p>
+      <div class="todo-add-row">
+        <input class="drawer-input" [(ngModel)]="newTodo" [placeholder]="i18n.t('ADD_TASK')" (keydown.enter)="addTodo()" />
+        <button class="add-task-btn" (click)="addTodo()">+ {{ i18n.t('ADD') }}</button>
+      </div>
+      <div class="todo-filters">
+        <input class="drawer-input" [formControl]="todoSearchCtrl" [placeholder]="i18n.t('SEARCH_TASK')" />
+        <select class="drawer-select" [(ngModel)]="statusFilter2">
+          <option value="">{{ i18n.t('ALL') }}</option>
+          <option value="Pending">{{ i18n.t('PENDING') }}</option>
+          <option value="Completed">{{ i18n.t('COMPLETED') }}</option>
+        </select>
+      </div>
+      <div class="todo-list">
+        <div *ngFor="let todo of todos() | todoFilter : todoSearch : statusFilter2"
+          class="todo-card" [class.todo-card--done]="todo.status === 'Completed'">
+          <div class="todo-card__content">
+            <input class="drawer-input drawer-input--sm" [value]="todo.title" (input)="updateTodo(todo.id, $any($event.target).value)" />
+            <select class="drawer-select drawer-select--sm" [value]="todo.status" (change)="updateStatus(todo.id, $any($event.target).value)">
+              <option value="Pending">{{ i18n.t('PENDING') }}</option>
+              <option value="Completed">{{ i18n.t('COMPLETED') }}</option>
+            </select>
+          </div>
+          <button class="todo-remove-btn" (click)="removeTodo(todo.id)">✕</button>
+        </div>
+        <p class="todo-empty" *ngIf="(todos() | todoFilter : todoSearch : statusFilter2).length === 0">No tasks yet.</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════ ADD ORGANIZATION MODAL ══════════ -->
+<div class="modal-backdrop" *ngIf="showAddModal" (click)="showAddModal=false;$event.stopPropagation()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header__title">
+        <div class="modal-header__icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <h2>{{ i18n.t('ORG_ADD_NEW') }}</h2>
+          <p>{{ i18n.t('ORG_ADD_NEW') }}</p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="showAddModal=false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" *ngIf="addError">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ addError }}
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field modal-field--full">
+          <label>{{ i18n.t('DETAIL_NAME') }} <span class="req">*</span></label>
+          <input [(ngModel)]="newOrgName" placeholder="e.g. Acme Corporation" />
+        </div>
+        <div class="modal-field">
+          <label>{{ i18n.t('DETAIL_TYPE') }} <span class="req">*</span></label>
+          <select [(ngModel)]="newOrgType">
+            <option *ngFor="let t of orgTypes" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>{{ i18n.t('DETAIL_STATUS') }}</label>
+          <select [(ngModel)]="newOrgStatus">
+            <option value="Active">{{ i18n.t('ORG_STATUS_ACTIVE') }}</option>
+            <option value="Inactive">{{ i18n.t('ORG_STATUS_INACTIVE') }}</option>
+            <option value="Pending">{{ i18n.t('ORG_STATUS_PENDING') }}</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>{{ i18n.t('DETAIL_CONTACT') }} <span class="req">*</span></label>
+          <input [(ngModel)]="newOrgContact" type="tel" placeholder="+1 (555) 000-0000" />
+        </div>
+        <div class="modal-field">
+          <label>{{ i18n.t('DETAIL_EMAIL') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="newOrgEmail" type="email" placeholder="contact@company.com" />
+        </div>
+        <div class="modal-field modal-field--full">
+          <label>{{ i18n.t('DETAIL_EMPLOYEES') }} <span class="opt">optional</span></label>
+          <input [(ngModel)]="newOrgEmployees" type="number" placeholder="e.g. 500" min="1" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn--ghost" (click)="showAddModal=false" [disabled]="addLoading">{{ i18n.t('ORG_CANCEL') }}</button>
+      <button class="modal-btn modal-btn--primary" (click)="submitAddOrg()" [disabled]="addLoading">
+        <span class="btn-spin" *ngIf="addLoading"></span>
+        <svg *ngIf="!addLoading" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        {{ addLoading ? i18n.t('SIGNUP_CREATING') : i18n.t('ORG_ADD_NEW') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DELETE CONFIRM ══════════ -->
+<div class="confirm-backdrop" *ngIf="deleteConfirmId() !== null" (click)="deleteConfirmId.set(null)">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <div class="confirm-dialog__icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3>{{ i18n.t('DETAIL_DELETE_TITLE') }}</h3>
+    <p>{{ i18n.t('ORG_CONFIRM_DEL_MSG') }}. {{ i18n.t('ORG_CONFIRM_DEL') }}</p>
+    <div class="confirm-dialog__actions">
+      <button class="confirm-btn confirm-btn--ghost" (click)="deleteConfirmId.set(null)">{{ i18n.t('ORG_CANCEL') }}</button>
+      <button class="confirm-btn confirm-btn--danger" (click)="executeDelete()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        {{ i18n.t('ORG_CONFIRM_DEL_BTN') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BULK DELETE CONFIRM ══════════ -->
+<div class="confirm-backdrop" *ngIf="showBulkConfirm" (click)="showBulkConfirm=false">
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <div class="confirm-dialog__icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3>{{ i18n.t('DETAIL_DELETE_TITLE') }} ({{ selectedIds().size }})</h3>
+    <p>{{ i18n.t('ORG_CONFIRM_DEL_MSG') }} <strong>{{ selectedIds().size }}</strong> {{ i18n.t('ORG_TITLE') }}.</p>
+    <div class="confirm-dialog__actions">
+      <button class="confirm-btn confirm-btn--ghost" (click)="showBulkConfirm=false">{{ i18n.t('ORG_CANCEL') }}</button>
+      <button class="confirm-btn confirm-btn--danger" (click)="executeBulkDelete()">{{ i18n.t('ORG_BULK_DELETE') }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ QUICK PREVIEW MODAL ══════════ -->
+<div class="preview-backdrop" *ngIf="previewOrg()" (click)="previewOrg.set(null)"></div>
+<div class="preview-modal" [class.preview-modal--open]="previewOrg() !== null" (click)="$event.stopPropagation()">
+  <ng-container *ngIf="previewOrg() as org">
+    <div class="preview-modal__header">
+      <div class="preview-modal__title-row">
+        <div class="preview-org-avatar" [style.background]="typeColor(org.orgType) + '18'" [style.color]="typeColor(org.orgType)">
+          {{ org.name.charAt(0) }}
+        </div>
+        <div>
+          <h3 class="preview-org-name">{{ org.name }}</h3>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
+            <span class="type-badge" [style.background]="typeColor(org.orgType)+'15'" [style.color]="typeColor(org.orgType)" [style.border-color]="typeColor(org.orgType)+'40'">{{ org.orgType }}</span>
+            <span class="status-pill" [class.status-pill--active]="org.status==='Active'" [class.status-pill--inactive]="org.status==='Inactive'" [class.status-pill--pending]="org.status==='Pending'"><span class="status-dot"></span>{{ org.status }}</span>
+          </div>
+        </div>
+      </div>
+      <button class="preview-close" (click)="previewOrg.set(null)">✕</button>
+    </div>
+    <div class="preview-modal__body">
+      <div class="preview-field">
+        <span class="preview-field__label">{{ i18n.t('DETAIL_CONTACT') }}</span>
+        <span class="preview-field__value preview-field__value--mono">{{ org.contact }}</span>
+      </div>
+      <div class="preview-field" *ngIf="org.email">
+        <span class="preview-field__label">{{ i18n.t('DETAIL_EMAIL') }}</span>
+        <span class="preview-field__value">{{ org.email }}</span>
+      </div>
+      <div class="preview-field" *ngIf="org.employees">
+        <span class="preview-field__label">{{ i18n.t('DETAIL_EMPLOYEES') }}</span>
+        <span class="preview-field__value">{{ org.employees | number }}</span>
+      </div>
+      <div class="preview-field">
+        <span class="preview-field__label">{{ i18n.t('ORG_DATE') }}</span>
+        <span class="preview-field__value">{{ org.createdOn }}</span>
+      </div>
+    </div>
+    <div class="preview-modal__footer">
+      <button class="preview-action-btn preview-action-btn--ghost" (click)="previewOrg.set(null)">{{ i18n.t('DETAIL_CANCEL') }}</button>
+      <button class="preview-action-btn preview-action-btn--primary" (click)="openDetail(org); previewOrg.set(null)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        {{ i18n.t('DETAIL_OVERVIEW') }}
+      </button>
+    </div>
+  </ng-container>
+</div>
