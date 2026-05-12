@@ -19,7 +19,7 @@
           "options": {
             "browser": "src/main.ts",
             "outputPath": "dist/home",
-            "baseHref": "/portfolio/",
+            "baseHref": "/OrgVault/",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
